@@ -1,0 +1,99 @@
+#! /bin/bash
+# bctl - script used to change brightness value
+# made by usrxela
+#
+# NOTE: this script requires root perms to run. You may change this at
+# your own risk by giving write permissions to yourself on the file denoted
+# in the STORED variable. "sys" files will revert to default permissions on
+# boot, so you must automate these changes on startup.
+#
+# This script uses notify-send in order to provide a GUI notification,
+# and was originally intended to work properly with i3 window manager when
+# binding this script to a key.
+#
+# You may delete everything starting with the case statement to remove it
+# and still retain functionality.
+#
+# ----------------------------------------------------------------------------
+#
+# STORED contains the location of the brightness controller, you
+# may change it as needed to fit your system.
+STORED="/sys/class/backlight/intel_backlight/brightness"
+
+# Possesses the current level of brightness. (Out of 7500)
+CLEVEL=`cat $STORED`
+
+# The value at which the brightness is adjusted by. Equivalent to 5%
+# of the maximum possible value.
+ADJ=375
+
+# REGEX pattern that matches all digits (used for checking user input)
+DCHECK='^[0-9]+$'
+
+# Sends the correct usage of the script if no parameter is entered.
+if [ -z $1 ]
+then
+	echo "Usage: bctl up/down or enter a number 0-100"
+	NLEVEL=$CLEVEL
+
+# Statements for incrementing/decrementing
+elif [ $1 = "up" ]
+then
+	NLEVEL=`echo $(($CLEVEL + $ADJ))`
+	echo $NLEVEL > $STORED 
+elif [ $1 = "down" ]
+then
+        NLEVEL=`echo $(($CLEVEL - $ADJ))`
+	
+	# Prevent from reaching total darkness
+	if (( $NLEVEL <= 0 ))
+	then
+		NLEVEL=375
+	fi
+        echo $NLEVEL > $STORED
+
+# Checks for digit input for specific % requests
+elif [[ $1 =~ $DCHECK ]]
+then
+	if (( $1 <= 100 && $1 >= 0 ))
+	then
+		NLEVEL=`echo $(( (7500/100) * $1 ))`
+		echo $NLEVEL > $STORED
+	else
+		echo "Usage: bctl up/down or enter a 0-100"
+		NLEVEL=$CLEVEL
+	fi
+else
+	echo "Usage: bctl up/down or enter a number 0-100"
+	NLEVEL=$CLEVEL
+fi
+
+# Notification interface showing status using notify-send
+PERCENT=$(( $NLEVEL / (7500 / 100)))
+if [ $PERCENT -eq 105 ]; then
+	PERCENT=100
+fi
+case $PERCENT in
+	[1-5]) BAR="<=                   >";;
+	[6-9]|10) BAR="<==                  >";; 
+	1[1-5]) BAR="<===                 >";;
+	1[6-9]|20) BAR="<====                >";;
+	2[1-5]) BAR="<=====               >";;
+	2[6-9]|30) BAR="<======              >";;
+	3[1-5]) BAR="<=======             >";;
+	3[6-9]|40) BAR="<========            >";;
+	4[1-5]) BAR="<=========           >";;
+	4[6-9]|50) BAR="<==========          >";;
+	5[1-5]) BAR="<===========         >";;
+	5[6-9]|60) BAR="<============        >";;
+	6[1-5]) BAR="<=============       >";;
+	6[6-9]|70) BAR="<==============      >";;
+	7[1-5]) BAR="<===============     >";;
+	7[6-9]|80) BAR="<================    >";;
+	8[1-5]) BAR="<=================   >";;
+	8[6-9]|90) BAR="<==================  >";;
+	9[1-5]) BAR="<=================== >";;
+	9[6-9]|100|105) BAR="<====================>";;
+	
+esac
+notify-send "brightness $PERCENT%  $BAR" -h string:x-canonical-private-synchronous:anything -u low

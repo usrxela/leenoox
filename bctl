@@ -8,11 +8,12 @@
 # boot, so you must automate these changes on startup.
 #
 # This script uses notify-send in order to provide a GUI notification,
-# and was originally intended to work properly with i3 window manager when
-# binding this script to a key.
+# and was originally intended to work properly with i3 window manager on
+# Ubuntu 20.04 (with Intel iGPU) when binding this script to a key. 
+# No other system has been tested yet.
 #
-# You may delete everything starting with the case statement to remove it
-# and still retain functionality.
+# You may delete everything starting with the case statement to remove the
+# progress bar and still retain functionality.
 #
 # ----------------------------------------------------------------------------
 #
